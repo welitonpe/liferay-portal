@@ -3,21 +3,34 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Fragment} from 'react';
+import ClayIcon from '@clayui/icon';
+import {ReactNode} from 'react';
 import {NavLink} from 'react-router-dom';
+
+import applicationsIconUrl from '../assets/icons/applications.svg';
+import productsIconUrl from '../assets/icons/products.svg';
+import unionIconUrl from '../assets/icons/union.svg';
 
 export type NavItem = {
 	children?: NavItem[];
+	end?: boolean;
+	icon?: string;
 	label: string;
 	path: string;
-	section?: string;
 };
 
-const SIDEBAR_BG = '#f4f5f8';
-const TEXT_INACTIVE = '#444d6d';
-const TEXT_ACTIVE = '#4a6cf7';
-const ACTIVE_BG = 'rgba(74, 108, 247, 0.08)';
-const TEXT_SECTION = '#8892a4';
+const ACTIVE_BG = '#E6EDFB';
+
+const CUSTOM_ICON_SPRITEMAPS: Record<string, string> = {
+	applications: applicationsIconUrl,
+	products: productsIconUrl,
+	union: unionIconUrl,
+};
+
+const SIDEBAR_BG = '#F7F7F8';
+const TEXT_ACTIVE = '#004AD7';
+const TEXT_INACTIVE = '#282934';
+const TEXT_SECTION = '#6B6C7E';
 
 type SideNavItemProps = {
 	depth: number;
@@ -26,26 +39,44 @@ type SideNavItemProps = {
 
 function SideNavItem({depth, item}: SideNavItemProps) {
 	const hasChildren = Boolean(item.children && item.children.length);
+	const icon = item.icon;
+	const customSpritemap = icon ? CUSTOM_ICON_SPRITEMAPS[icon] : undefined;
 
 	return (
 		<li>
 			<NavLink
-				className="d-block text-decoration-none"
-				end={!hasChildren}
+				className="align-items-center d-flex text-decoration-none w-100"
+				end={item.end ?? !hasChildren}
 				style={({isActive}) => ({
-					backgroundColor: isActive ? ACTIVE_BG : undefined,
-					borderRadius: '6px',
+					backgroundColor: isActive ? ACTIVE_BG : 'transparent',
+					borderRadius: '0.375rem',
 					color: isActive ? TEXT_ACTIVE : TEXT_INACTIVE,
-					fontWeight: isActive ? 600 : undefined,
-					margin: '1px 8px',
-					paddingBottom: '0.5rem',
-					paddingLeft: `${0.75 + depth}rem`,
-					paddingRight: '0.75rem',
-					paddingTop: '0.5rem',
+					fontSize: '1rem',
+					fontWeight: 600,
+					gap: '0.75rem',
+					lineHeight: '1.5rem',
+					padding: `0.75rem 0.75rem 0.75rem ${0.75 + depth * 0.75}rem`,
 				})}
 				to={item.path}
 			>
-				{item.label}
+				{({isActive}) => (
+					<>
+						{icon && (
+							<ClayIcon
+								spritemap={customSpritemap}
+								style={{
+									flexShrink: 0,
+									opacity: isActive ? 1 : 0.5,
+								}}
+								symbol={icon}
+							/>
+						)}
+
+						<span style={{flex: '1 0 0', textAlign: 'left'}}>
+							{item.label}
+						</span>
+					</>
+				)}
 			</NavLink>
 
 			{hasChildren && (
@@ -64,62 +95,56 @@ function SideNavItem({depth, item}: SideNavItemProps) {
 }
 
 type SideNavProps = {
+	header?: ReactNode;
 	items: NavItem[];
 	title?: string;
 };
 
-export default function SideNav({items, title}: SideNavProps) {
+export default function SideNav({header, items, title}: SideNavProps) {
 	return (
 		<nav
-			className="align-self-start d-flex flex-column flex-shrink-0 overflow-auto pb-3 pt-3"
-			style={{
-				backgroundColor: SIDEBAR_BG,
-				borderRadius: '0.75rem',
-				width: '220px',
-			}}
+			className="align-self-start d-flex flex-column flex-shrink-0"
+			style={{gap: '0.75rem', width: '18rem'}}
 		>
-			{title && (
+			{header && (
 				<div
-					className="font-weight-bold pb-2 px-3 text-uppercase"
 					style={{
-						color: TEXT_SECTION,
-						fontSize: '0.625rem',
-						letterSpacing: '0.1em',
+						backgroundColor: SIDEBAR_BG,
+						borderRadius: '0.625rem',
+						padding: '0.75rem',
 					}}
 				>
-					{title}
+					{header}
 				</div>
 			)}
 
-			<ul className="flex-fill list-unstyled m-0">
-				{items.map((item, index) => {
-					const prevSection =
-						index > 0 ? items[index - 1].section : undefined;
-					const showSectionHeader =
-						item.section && item.section !== prevSection;
+			<div
+				className="d-flex flex-column overflow-auto"
+				style={{
+					backgroundColor: SIDEBAR_BG,
+					borderRadius: '0.625rem',
+					padding: '0.5rem',
+				}}
+			>
+				{title && (
+					<div
+						className="font-weight-bold pb-2 px-3 text-uppercase"
+						style={{
+							color: TEXT_SECTION,
+							fontSize: '0.625rem',
+							letterSpacing: '0.1em',
+						}}
+					>
+						{title}
+					</div>
+				)}
 
-					return (
-						<Fragment key={item.path}>
-							{showSectionHeader && (
-								<li
-									className="font-weight-bold pb-1 px-3 text-uppercase"
-									style={{
-										color: TEXT_SECTION,
-										fontSize: '0.625rem',
-										letterSpacing: '0.1em',
-										paddingTop:
-											index === 0 ? '0.25rem' : '1.25rem',
-									}}
-								>
-									{item.section}
-								</li>
-							)}
-
-							<SideNavItem depth={0} item={item} />
-						</Fragment>
-					);
-				})}
-			</ul>
+				<ul className="d-flex flex-column flex-fill gap-2 list-unstyled m-0">
+					{items.map((item) => (
+						<SideNavItem depth={0} item={item} key={item.path} />
+					))}
+				</ul>
+			</div>
 		</nav>
 	);
 }

@@ -1,8 +1,111 @@
 {
+	"masterPage": {
+		"key": "liferay-one"
+	},
 	"pageElement": {
 		"pageElements": [
 			{
 				"definition": {
+					"indexed": true,
+					"layout": {
+						"widthType": "Fluid"
+					}
+				},
+				"pageElements": [
+					{
+						"definition": {
+							"gutters": false,
+							"indexed": true,
+							"modulesPerRow": 1,
+							"numberOfColumns": 1
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"size": 12
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"fragment": {
+												"key": "hero-banner",
+												"siteKey": "[$GROUP_KEY$]"
+											},
+											"fragmentConfig": {
+												"homeLink": "/web/one/home",
+												"parentLink": "/web/one/marketplace"
+											},
+											"fragmentFields": [
+												{
+													"id": "breadcrumb-current",
+													"value": {
+														"text": {
+															"value_i18n": {
+																"en_US": "Solutions Catalog"
+															}
+														}
+													}
+												},
+												{
+													"id": "breadcrumb-parent",
+													"value": {
+														"text": {
+															"value_i18n": {
+																"en_US": "Marketplace"
+															}
+														}
+													}
+												},
+												{
+													"id": "subtitle",
+													"value": {
+														"text": {
+															"value_i18n": {
+																"en_US": "Expand Liferay's portfolio through apps from our partner and developer ecosystems to enhance your digital transformation."
+															}
+														}
+													}
+												},
+												{
+													"id": "title",
+													"value": {
+														"text": {
+															"value_i18n": {
+																"en_US": "Solutions Catalog"
+															}
+														}
+													}
+												}
+											],
+											"fragmentStyle": {
+												"backgroundFragmentImage": {
+													"url": {
+														"mapping": {
+															"fieldKey": "FileEntry_previewImage",
+															"itemReference": {
+																"className": "com.liferay.portal.kernel.repository.model.FileEntry",
+																"classPK": "[#DOCUMENT_FILE_ENTRY_ID:/site-initializer/documents/group/hero_banner_solutions_catalog.png#]"
+															}
+														}
+													}
+												}
+											},
+											"indexed": true
+										},
+										"type": "Fragment"
+									}
+								],
+								"type": "Column"
+							}
+						],
+						"type": "Row"
+					}
+				],
+				"type": "Section"
+			},
+			{
+				"definition": {
+					"cssClass": "container-fluid container-fluid-max-xl",
 					"indexed": true,
 					"layout": {
 						"widthType": "Fluid"
@@ -182,83 +285,6 @@
 									"size": 9
 								},
 								"pageElements": [
-									{
-										"definition": {
-											"indexed": true,
-											"layout": {
-												"contentDisplay": "FlexColumn",
-												"paddingBottom": 4,
-												"paddingTop": 4
-											}
-										},
-										"pageElements": [
-											{
-												"definition": {
-													"fragmentStyle": {
-														"paddingBottom": "3"
-													},
-													"widgetInstance": {
-														"widgetConfig": {
-														},
-														"widgetName": "com_liferay_site_navigation_breadcrumb_web_portlet_SiteNavigationBreadcrumbPortlet"
-													}
-												},
-												"type": "Widget"
-											},
-											{
-												"definition": {
-													"fragment": {
-														"key": "BASIC_COMPONENT-heading"
-													},
-													"fragmentFields": [
-														{
-															"id": "element-text",
-															"value": {
-																"text": {
-																	"value_i18n": {
-																		"en_US": "Solutions"
-																	}
-																}
-															}
-														}
-													],
-													"fragmentStyle": {
-														"fontSize": "33px",
-														"fontWeight": "600",
-														"textColor": "#282934"
-													},
-													"indexed": true
-												},
-												"type": "Fragment"
-											},
-											{
-												"definition": {
-													"fragment": {
-														"key": "BASIC_COMPONENT-paragraph"
-													},
-													"fragmentFields": [
-														{
-															"id": "element-text",
-															"value": {
-																"text": {
-																	"value_i18n": {
-																		"en_US": "<p>Browse curated solutions designed to address specific business challenges on the Liferay platform.</p>"
-																	}
-																}
-															}
-														}
-													],
-													"fragmentStyle": {
-														"fontSize": "18px",
-														"textColor": "#82828C"
-													},
-													"indexed": true
-												},
-												"type": "Fragment"
-											}
-										],
-										"type": "Section"
-									},
 									{
 										"definition": {
 											"indexed": true,

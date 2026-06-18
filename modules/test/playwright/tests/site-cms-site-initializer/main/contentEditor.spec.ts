@@ -360,7 +360,11 @@ test(
 
 		// Check that the content is visible that means we redirected to the folder
 
-		await expect(page.getByText(title)).toBeVisible();
+		await expect(
+			page
+				.locator('tr', {hasText: title})
+				.or(page.locator('.card-row', {hasText: title}))
+		).toBeVisible();
 
 		// Delete content and folder
 
@@ -370,7 +374,11 @@ test(
 
 		await folderPage.deleteFolder(folderName);
 
-		await expect(page.getByText(folderName)).not.toBeVisible();
+		await expect(
+			page
+				.locator('tr', {hasText: folderName})
+				.or(page.locator('.card-row', {hasText: folderName}))
+		).not.toBeVisible();
 	}
 );
 
@@ -703,7 +711,7 @@ test.describe('Comments Panel', () => {
 			await page
 				.getByRole('option', {name: 'View, Download, Comment, and'})
 				.click();
-			await page.getByRole('button', {name: 'Save'}).click();
+			await page.getByRole('button', {name: 'Share'}).click();
 
 			await performLogout(page);
 
@@ -1386,7 +1394,7 @@ test.describe('Schedule Publication', () => {
 			// Check that it remains on the page and the error is shown
 
 			await expect(
-				page.getByRole('heading', {name: 'Edit Basic Web Content'})
+				page.getByRole('heading', {name: 'New Basic Web Content'})
 			).toBeAttached();
 
 			await expect(
@@ -1518,7 +1526,7 @@ test.describe('Schedule Publication', () => {
 
 test(
 	'The Rich Text required error only occurs when the field has no value',
-	{tag: '@LPD-69695'},
+	{tag: ['@LPD-69695', '@LPD-93785']},
 	async ({contentsPage, page, structureBuilderPage}) => {
 
 		// Create a structure with a required Rich Text field
@@ -1555,6 +1563,10 @@ test(
 		await expect(
 			page.locator('.rich-text-input [data-required-error]')
 		).toHaveText('This field is required.');
+
+		// The AI Creator button is not available in the CMS Rich Text editor
+
+		await expect(page.getByTitle('Create AI Content')).toBeHidden();
 
 		// Fill the Rich Text field and publish the content
 
@@ -1846,7 +1858,7 @@ test(
 test(
 	'Repetable text input is validated correctly',
 	{
-		tag: '@LPD-69446',
+		tag: ['@LPD-69446', '@LPD-92353'],
 	},
 	async ({contentsPage, page, structureBuilderPage}) => {
 
@@ -1900,7 +1912,9 @@ test(
 
 		const firstText = page.getByRole('textbox', {name: 'Text'}).first();
 
-		await firstText.fill('MoreThan5Characters');
+		await firstText.pressSequentially('MoreThan5Characters');
+
+		await expect(firstText).toHaveValue('MoreThan5Characters');
 
 		// Save content
 
@@ -1911,8 +1925,6 @@ test(
 		await expect(
 			page.getByText('Value exceeds maximum length of 5 for field Text.')
 		).toBeVisible();
-
-		await expect(firstText).toHaveValue('MoreThan5Characters');
 
 		// Delete content
 

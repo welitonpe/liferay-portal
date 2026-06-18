@@ -3,18 +3,32 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ClayIconSpriteContext} from '@clayui/icon';
+import {ClayModalProvider} from '@clayui/modal';
 import React, {Suspense} from 'react';
 import {Root, createRoot} from 'react-dom/client';
+import {SWRConfig} from 'swr';
 
 import ErrorBoundary from './components/ErrorBoundary';
+import OneContextProvider from './context/OneContext';
 import {PropertiesProvider} from './context/PropertiesContext';
+import {getIconSpriteMap} from './liferay/constants';
+import SWRCacheProvider from './services/SWRCacheProvider';
+import fetcher from './services/fetcher';
 import {baseAttributes, getAttributes} from './utils/attributes';
 
 type RouterComponent = React.ComponentType;
 
 const routers: Record<string, React.LazyExoticComponent<RouterComponent>> = {
+	'account-selector': React.lazy(
+		() => import('./pages/AccountSelector/AccountSelectorRouter')
+	),
 	'admin': React.lazy(() => import('./pages/Admin/AdminRouter')),
 	'my-account': React.lazy(() => import('./pages/MyAccount/MyAccountRouter')),
+	'product-purchase': React.lazy(
+		() => import('./pages/ProductPurchase/ProductPurchaseRouter')
+	),
+	'support': React.lazy(() => import('./pages/Support/SupportRouter')),
 };
 
 class WebComponent extends HTMLElement {
@@ -29,13 +43,30 @@ class WebComponent extends HTMLElement {
 			return;
 		}
 
+		const properties = getAttributes(this);
+
 		this.root.render(
 			<ErrorBoundary>
-				<PropertiesProvider value={getAttributes(this)}>
-					<Suspense fallback={null}>
-						<Router />
-					</Suspense>
-				</PropertiesProvider>
+				<ClayIconSpriteContext.Provider value={getIconSpriteMap()}>
+					<SWRConfig
+						value={{
+							fetcher,
+							provider: SWRCacheProvider,
+							revalidateIfStale: true,
+							revalidateOnFocus: false,
+						}}
+					>
+						<PropertiesProvider value={properties}>
+							<OneContextProvider properties={properties}>
+								<ClayModalProvider>
+									<Suspense fallback={null}>
+										<Router />
+									</Suspense>
+								</ClayModalProvider>
+							</OneContextProvider>
+						</PropertiesProvider>
+					</SWRConfig>
+				</ClayIconSpriteContext.Provider>
 			</ErrorBoundary>
 		);
 	}

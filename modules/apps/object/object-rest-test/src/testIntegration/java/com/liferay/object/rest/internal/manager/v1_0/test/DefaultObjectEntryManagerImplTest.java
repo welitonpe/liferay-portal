@@ -25,6 +25,10 @@ import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.test.util.CPTestUtil;
+import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
@@ -163,6 +167,7 @@ import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -197,6 +202,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -210,6 +216,7 @@ import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
@@ -286,8 +293,8 @@ import org.junit.runner.RunWith;
  */
 @FeatureFlags(
 	featureFlags = {
-		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPS-164801"),
-		@FeatureFlag("LPS-172017")
+		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPD-69877"),
+		@FeatureFlag(value = "LPS-164801"), @FeatureFlag("LPS-172017")
 	}
 )
 @RunWith(Arquillian.class)
@@ -1432,6 +1439,78 @@ public class DefaultObjectEntryManagerImplTest
 			organizationUserRole);
 
 		_addObjectEntry(accountEntry);
+	}
+
+	@Test
+	public void testAddObjectEntryWithAllowStandaloneObjectEntry()
+		throws Exception {
+
+		// Allow standalone object entry setting is disabled
+
+		_companyObjectDefinitionAA =
+			objectDefinitionLocalService.getObjectDefinition(
+				_companyObjectDefinitionAA.getObjectDefinitionId());
+
+		ObjectDefinitionSetting objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.fetchObjectDefinitionSetting(
+				_companyObjectDefinitionAA.getObjectDefinitionId(),
+				ObjectDefinitionSettingConstants.
+					NAME_ALLOW_STANDALONE_OBJECT_ENTRY);
+
+		String originalAllowStandaloneObjectEntryValue =
+			objectDefinitionSetting.getValue();
+
+		objectDefinitionSetting.setValue(StringPool.FALSE);
+
+		objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+				objectDefinitionSetting);
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.NotAllowedStandaloneObjectEntry.class,
+			StringBundler.concat(
+				"Standalone object entry is not allowed for object definition ",
+				"\"", _companyObjectDefinitionAA.getShortName(), "\""),
+			() -> _addObjectEntry(
+				objectDefinitionLocalService.getObjectDefinition(
+					_companyObjectDefinitionAA.getObjectDefinitionId()),
+				Collections.emptyMap()));
+
+		ObjectEntry relatedObjectEntry =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = new HashMap<>();
+					}
+				},
+				_companyObjectEntryA.getId(), _companyObjectRelationshipA_AA);
+
+		Assert.assertNotNull(relatedObjectEntry);
+
+		// Allow standalone object entry setting is enabled
+
+		objectDefinitionSetting.setValue(StringPool.TRUE);
+
+		objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+				objectDefinitionSetting);
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectDefinitionLocalService.getObjectDefinition(
+				_companyObjectDefinitionAA.getObjectDefinitionId()),
+			Collections.emptyMap());
+
+		Assert.assertNotNull(objectEntry);
+
+		objectDefinitionSetting.setValue(
+			originalAllowStandaloneObjectEntryValue);
+
+		_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+			objectDefinitionSetting);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry.getId());
+		_objectEntryLocalService.deleteObjectEntry(relatedObjectEntry.getId());
 	}
 
 	@Test
@@ -7151,6 +7230,81 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
+	public void testGetRelatedObjectEntriesWithCommerceProduct()
+		throws Exception {
+
+		ObjectDefinition childObjectDefinition = _addObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()));
+
+		CommerceCatalog commerceCatalog = CPTestUtil.getSystemCommerceCatalog(
+			TestPropsValues.getCompanyId());
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, true,
+			true);
+
+		ObjectDefinition cpDefinitionObjectDefinition =
+			objectDefinitionLocalService.fetchSystemObjectDefinition(
+				companyId, "CPDefinition");
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				null, adminUser.getUserId(),
+				cpDefinitionObjectDefinition.getObjectDefinitionId(),
+				childObjectDefinition.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(), false,
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		try {
+			ObjectField objectField = objectFieldLocalService.getObjectField(
+				objectRelationship.getObjectFieldId2());
+
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, childObjectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectField.getName(), cpDefinition.getCProductId()
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+			Page<ObjectEntry> page =
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					_simpleDTOConverterContext, cpDefinition.getCProductId(),
+					objectRelationship, null);
+
+			Collection<ObjectEntry> objectEntries = page.getItems();
+
+			Assert.assertEquals(
+				objectEntries.toString(), 1, objectEntries.size());
+		}
+		finally {
+			PersistedModelLocalService persistedModelLocalService =
+				PersistedModelLocalServiceRegistryUtil.
+					getPersistedModelLocalService(CPDefinition.class.getName());
+
+			persistedModelLocalService.deletePersistedModel(cpDefinition);
+
+			_objectRelationshipLocalService.deleteObjectRelationship(
+				objectRelationship);
+
+			objectDefinitionLocalService.deleteObjectDefinition(
+				childObjectDefinition.getObjectDefinitionId());
+		}
+	}
+
+	@Test
 	public void testGetRelatedObjectEntriesWithRootObjectEntryId()
 		throws Exception {
 
@@ -11051,12 +11205,16 @@ public class DefaultObjectEntryManagerImplTest
 
 			@Override
 			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/c/");
+				return URI.create(
+					"http://localhost:" +
+						PortalUtil.getPortalServerPort(false) + "/o/c/");
 			}
 
 			@Override
 			public UriBuilder getBaseUriBuilder() {
-				return UriBuilder.fromUri("http://localhost:8080/o/c/");
+				return UriBuilder.fromUri(
+					"http://localhost:" +
+						PortalUtil.getPortalServerPort(false) + "/o/c/");
 			}
 
 			@Override

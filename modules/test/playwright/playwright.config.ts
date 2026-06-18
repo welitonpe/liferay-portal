@@ -11,6 +11,7 @@ import {liferayConfig} from './liferay.config';
 import {config as accessibilityMenuWeb} from './tests/accessibility-menu-web/main/config';
 import {config as accountAdminWebConfig} from './tests/account-admin-web/main/config';
 import {config as addressWebConfig} from './tests/address-web/main/config';
+import {config as aiHubSiteInitializerConfig} from './tests/ai-hub-site-initializer/main/config';
 import {config as analyticsClientJs} from './tests/analytics-client-js/main/config';
 import {config as analyticsReportsJsComponentsWeb} from './tests/analytics-reports-js-components-web/main/config';
 import {config as analyticsSettingsWebConfig} from './tests/analytics-settings-web/main/config';
@@ -181,6 +182,7 @@ import {config as scimConfiguraitonWebConfig} from './tests/scim-configuration-w
 import {config as searchExperiencesWebConfig} from './tests/search-experiences-web/main/config';
 import {config as segmentExperimentWebConfig} from './tests/segment-experiment-web/main/config';
 import {config as segmentsWebConfig} from './tests/segments-web/main/config';
+import {config as seoStudioWebConfig} from './tests/seo-studio-web/main/config';
 import {config as pageManagementSiteConfig} from './tests/setup/page-management-site/main/config';
 import {config as pageManagementSiteTeardownConfig} from './tests/setup/page-management-site/teardown/config';
 import {config as siteCmsSiteConfig} from './tests/setup/site-cms-site/main/config';
@@ -235,6 +237,7 @@ export default defineConfig({
 		accessibilityMenuWeb,
 		accountAdminWebConfig,
 		addressWebConfig,
+		aiHubSiteInitializerConfig,
 		analyticsClientJs,
 		analyticsReportsJsComponentsWeb,
 		analyticsSettingsWebConfig,
@@ -409,6 +412,7 @@ export default defineConfig({
 		searchExperiencesWebConfig,
 		segmentExperimentWebConfig,
 		segmentsWebConfig,
+		seoStudioWebConfig,
 		siteAdminWebConfig,
 		siteCmpSiteInitializerConfig,
 		siteCmsSiteInitializerConfig,

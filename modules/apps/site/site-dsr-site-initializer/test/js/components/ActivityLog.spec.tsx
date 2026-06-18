@@ -51,15 +51,13 @@ jest.mock(
 jest.mock(
 	'../../../src/main/resources/META-INF/resources/js/common/hooks/useAnalyticsQuery',
 	() => {
-		const {
-			activityLogDevEnvData,
-		} = require('../fixtures/analyticsDevEnvData');
+		const {activityLogFixture} = require('../fixtures/ActivityLogFixture');
 
 		return {
 			__esModule: true,
 			default: jest.fn(() => ({
 				isLoading: false,
-				response: activityLogDevEnvData,
+				response: activityLogFixture,
 				sendRequest: jest.fn(),
 			})),
 		};
@@ -124,24 +122,38 @@ describe('ActivityLog Component', () => {
 	});
 
 	it('renders a date header per distinct event day', () => {
-		render(<ActivityLog />);
+		render(<ActivityLog isAnalyticsEnabled={true} />);
 
 		expect(screen.getByText('2026-03-06')).toBeInTheDocument();
 		expect(screen.getByText('2026-03-07')).toBeInTheDocument();
 	});
 
 	it('groups consecutive logs for the same user', () => {
-		render(<ActivityLog />);
+		render(<ActivityLog isAnalyticsEnabled={true} />);
 
 		expect(screen.getAllByText('John Doe').length).toBe(1);
 		expect(screen.getAllByText('Paul Gerome').length).toBe(1);
 	});
 
+	it('falls back to the anonymous label when a user session has no user name', () => {
+		render(<ActivityLog isAnalyticsEnabled={true} />);
+
+		expect(screen.getByText('anonymous')).toBeInTheDocument();
+	});
+
 	it('renders an asset title per event', () => {
-		render(<ActivityLog />);
+		render(<ActivityLog isAnalyticsEnabled={true} />);
 
 		expect(screen.getByText('document_a')).toBeInTheDocument();
 		expect(screen.getByText('document_b')).toBeInTheDocument();
 		expect(screen.getByText('document_c')).toBeInTheDocument();
+	});
+
+	it('renders the not-configured message when analytics cloud is not configured', () => {
+		render(<ActivityLog isAnalyticsEnabled={false} />);
+
+		expect(
+			screen.getByText('analytics-cloud-is-not-configured')
+		).toBeInTheDocument();
 	});
 });

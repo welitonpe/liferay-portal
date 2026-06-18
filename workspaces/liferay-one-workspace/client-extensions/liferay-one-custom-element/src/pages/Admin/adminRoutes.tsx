@@ -13,13 +13,16 @@ const Environments = lazy(() => import('./Environments/Environments'));
 const LicenseKeyUploads = lazy(
 	() => import('./LicenseKeyUploads/LicenseKeyUploads')
 );
+const ManageSsaSaasUsers = lazy(
+	() => import('./ManageSsaSaasUsers/ManageSsaSaasUsers')
+);
 const MessageQueue = lazy(() => import('./MessageQueue/MessageQueue'));
 const MPFinanceOrders = lazy(() => import('./MPFinanceOrders/MPFinanceOrders'));
 const MPSummary = lazy(() => import('./MPSummary/MPSummary'));
-const MySsaSaasEnvironments = lazy(
-	() => import('./MySsaSaasEnvironments/MySsaSaasEnvironments')
-);
+const MySsaSaasDemo = lazy(() => import('./MySsaSaasDemo/MySsaSaasDemo'));
+const OrderDetails = lazy(() => import('./MPFinanceOrders/OrderDetails'));
 const Orders = lazy(() => import('./Orders/Orders'));
+const PaymentDetails = lazy(() => import('./Payments/PaymentDetails'));
 const Payments = lazy(() => import('./Payments/Payments'));
 const PublisherRequests = lazy(
 	() => import('./PublisherRequests/PublisherRequests')
@@ -33,69 +36,80 @@ export const adminRoutes: AppRoute[] = [
 
 	{
 		element: <MPSummary />,
-		nav: {label: 'Summary', section: 'Marketplace'},
+		nav: {icon: 'polls', label: 'Marketplace Summary'},
 		path: 'mp-summary',
 	},
 	{
 		element: <Orders />,
-		nav: {label: 'Orders', section: 'Marketplace'},
+		nav: {icon: 'order-form', label: 'Marketplace Orders'},
 		path: 'mp-orders',
 	},
 	{
 		element: <Apps />,
-		nav: {label: 'Apps', section: 'Marketplace'},
+		nav: {icon: 'grid', label: 'Marketplace Apps'},
 		path: 'mp-apps',
 	},
 	{
 		element: <Solutions />,
-		nav: {label: 'Solutions', section: 'Marketplace'},
+		nav: {icon: 'union', label: 'Marketplace Solutions'},
 		path: 'mp-solutions',
 	},
 	{
+		element: <MPFinanceOrders />,
+		nav: {icon: 'order-form', label: 'Marketplace Finance Orders'},
+		path: 'mp-finance-orders',
+	},
+	{
+		element: <OrderDetails />,
+		path: 'mp-finance-orders/:orderId',
+	},
+	{
+		element: <Payments />,
+		nav: {icon: 'order-form', label: 'Marketplace Payments'},
+		path: 'mp-payments',
+	},
+	{
+		element: <PaymentDetails />,
+		path: 'mp-payments/:entryId',
+	},
+	{
 		element: <Publishers />,
-		nav: {label: 'Publishers', section: 'Marketplace'},
+		nav: {icon: 'squares-clock', label: 'Publishers'},
 		path: 'publishers',
 	},
 	{
 		element: <PublisherRequests />,
-		nav: {label: 'Publisher Requests', section: 'Marketplace'},
+		nav: {icon: 'order-form', label: 'Publisher Requests'},
 		path: 'publisher-requests',
 	},
 	{
 		element: <Trials />,
-		nav: {label: '7 Day Trials', section: 'Marketplace'},
+		nav: {icon: 'grid', label: '7 Days Trials'},
 		path: 'trials',
 	},
-
 	{
-		element: <MySsaSaasEnvironments />,
-		nav: {label: 'My SaaS Environments', section: 'SSA'},
-		path: 'my-ssa-saas-environments',
+		element: <MySsaSaasDemo />,
+		nav: {icon: 'union', label: 'My SSA SaaS Demo'},
+		path: 'my-ssa-saas-demo',
 	},
 	{
 		element: <Environments />,
-		nav: {label: 'SaaS Environments', section: 'SSA'},
+		nav: {icon: 'squares-clock', label: 'SSA SaaS Environments'},
 		path: 'ssa-saas-environments',
 	},
-
 	{
-		element: <MPFinanceOrders />,
-		nav: {label: 'Orders', section: 'Finance'},
-		path: 'mp-finance-orders',
-	},
-	{
-		element: <Payments />,
-		nav: {label: 'Payments', section: 'Finance'},
-		path: 'mp-payments',
+		element: <ManageSsaSaasUsers />,
+		nav: {icon: 'users', label: 'Manage SSA SaaS Users'},
+		path: 'manage-ssa-saas-users',
 	},
 	{
 		element: <MessageQueue />,
-		nav: {label: 'Message Queue', section: 'Support'},
+		nav: {icon: 'message-boards', label: 'Message Queue'},
 		path: 'message-queue',
 	},
 	{
 		element: <LicenseKeyUploads />,
-		nav: {label: 'License Key Uploads', section: 'Support'},
+		nav: {icon: 'password-policies', label: 'License Key Uploads'},
 		path: 'license-key-uploads',
 	},
 

@@ -59,7 +59,7 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 		super.setUp();
 
 		Page<Country> countriesPage = countryResource.getCountriesPage(
-			null, null, Pagination.of(1, -1), null);
+			null, null, null, Pagination.of(1, -1), null);
 
 		for (Country country : countriesPage.getItems()) {
 			_addCountryA2AndA3(country.getA2(), country.getA3());
@@ -70,7 +70,7 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 	@Test
 	public void testGetCountriesPage() throws Exception {
 		Page<Country> page = countryResource.getCountriesPage(
-			null, null, Pagination.of(1, _getPageSize()), null);
+			null, null, null, Pagination.of(1, _getPageSize()), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -78,7 +78,7 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 		Country country2 = testGetCountriesPage_addCountry(randomCountry());
 
 		page = countryResource.getCountriesPage(
-			null, null, Pagination.of(1, _getPageSize()), null);
+			null, null, null, Pagination.of(1, _getPageSize()), null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -346,7 +346,7 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<Country> ascPage = countryResource.getCountriesPage(
-				null, keywords, Pagination.of(1, 2),
+				null, keywords, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
@@ -354,7 +354,7 @@ public class CountryResourceTest extends BaseCountryResourceTestCase {
 				(List<Country>)ascPage.getItems());
 
 			Page<Country> descPage = countryResource.getCountriesPage(
-				null, keywords, Pagination.of(1, 2),
+				null, keywords, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(

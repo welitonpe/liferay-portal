@@ -7,6 +7,7 @@ package com.liferay.jenkins.results.parser.testray;
 
 import com.liferay.jenkins.results.parser.BuildReportFactory;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.MultiPattern;
 import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 
 import java.io.IOException;
@@ -305,9 +306,9 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 
 	public synchronized TestrayRun getTestrayRun(String name) {
 		for (TestrayRun testrayRun : getTestrayRuns()) {
-			String testrayRunIDString = testrayRun.getRunIDString();
+			String runIDString = testrayRun.getRunIDString();
 
-			if (testrayRunIDString.equals(name)) {
+			if (runIDString.equals(name)) {
 				return testrayRun;
 			}
 		}
@@ -335,10 +336,9 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 			JSONArray itemsJSONArray = responseJSONObject.getJSONArray("items");
 
 			for (int i = 0; i < itemsJSONArray.length(); i++) {
-				JSONObject itemJSONObject = itemsJSONArray.getJSONObject(i);
-
 				_testrayRuns.add(
-					TestrayFactory.newTestrayRun(this, itemJSONObject));
+					TestrayFactory.newTestrayRun(
+						this, itemsJSONArray.getJSONObject(i)));
 			}
 		}
 		catch (IOException ioException) {
@@ -401,18 +401,43 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 	}
 
 	public URL getTopLevelBuildURL() {
-		Matcher matcher = _getTestrayAttachmentURLMatcher();
+		String description = getDescription();
 
-		if (matcher == null) {
+		Matcher matcher = null;
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(description)) {
+			matcher = _descriptionMultiPattern.matches(description);
+		}
+
+		String topLevelBuildNumber = null;
+		String topLevelJobName = null;
+		String topLevelMasterHostname = null;
+
+		if (matcher != null) {
+			topLevelBuildNumber = matcher.group("topLevelBuildNumber");
+			topLevelJobName = matcher.group("topLevelJobName");
+			topLevelMasterHostname = matcher.group("topLevelMasterHostname");
+		}
+		else {
+			matcher = _getTestrayAttachmentURLMatcher();
+
+			if (matcher != null) {
+				topLevelBuildNumber = matcher.group("topLevelBuildNumber");
+				topLevelJobName = matcher.group("topLevelJobName");
+				topLevelMasterHostname = matcher.group(
+					"topLevelMasterHostname");
+			}
+		}
+
+		if (topLevelMasterHostname == null) {
 			return null;
 		}
 
 		try {
 			return new URL(
 				JenkinsResultsParserUtil.combine(
-					"https://", matcher.group("topLevelMasterHostname"),
-					".liferay.com/job/", matcher.group("topLevelJobName"), "/",
-					matcher.group("topLevelBuildNumber"), "/"));
+					"https://", topLevelMasterHostname, ".liferay.com/job/",
+					topLevelJobName, "/", topLevelBuildNumber));
 		}
 		catch (MalformedURLException malformedURLException) {
 			throw new RuntimeException(malformedURLException);
@@ -471,12 +496,12 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 		_testrayRoutine = _testrayServer.getTestrayRoutineByID(
 			Long.parseLong(matcher.group("routineID")));
 
-		String filter = JenkinsResultsParserUtil.combine(
+		String filterString = JenkinsResultsParserUtil.combine(
 			"id eq '", matcher.group("buildID"), "'");
 
 		try {
 			Set<JSONObject> entityJSONObjects = _testrayServer.requestGraphQL(
-				"builds", FIELD_NAMES, filter, null, 1, 1);
+				"builds", FIELD_NAMES, filterString, null, 1, 1);
 
 			if (entityJSONObjects.isEmpty()) {
 				throw new RuntimeException("Unable to find entity JSON object");
@@ -548,6 +573,18 @@ public class TestrayBuild implements Comparable<TestrayBuild> {
 		return null;
 	}
 
+	private static final MultiPattern _descriptionMultiPattern =
+		new MultiPattern(
+			JenkinsResultsParserUtil.combine(
+				".*<a href=\"https://(?<topLevelMasterHostname>test-\\d+-\\d+)",
+				"\\.liferay\\.com/userContent/jobs/(?<topLevelJobName>[^/]+)/",
+				"builds/(?<topLevelBuildNumber>\\d+)/jenkins-report\\.html\">",
+				"Jenkins Report</a>.*"),
+			JenkinsResultsParserUtil.combine(
+				".*<a href=\".+/testray-results/\\d{4}-\\d{2}/",
+				"(?<topLevelMasterHostname>test-\\d+-\\d+)/",
+				"(?<topLevelJobName>[^/]+)/(?<topLevelBuildNumber>\\d+)/",
+				"[^\"]+\">Jenkins Report</a>.*"));
 	private static final Pattern _portalBranchPattern = Pattern.compile(
 		"Portal Branch: (?<portalBranch>[^;]+);");
 	private static final Pattern _testrayAttachmentURLPattern = Pattern.compile(
