@@ -61,6 +61,9 @@ function main {
 	echo "Setting virtual hosts."
 	bash scripts/bootstrap/set_virtual_hosts.sh
 
+	echo "Re-provisioning etc-spring-boot OAuth redirect URIs."
+	bash scripts/bootstrap/reprovision_etc_spring_boot_oauth.sh
+
 	echo "Done. The One site has been reset."
 }
 
