@@ -17,11 +17,13 @@ import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Product;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductPurchase;
 import com.liferay.osb.koroneiki.phloem.rest.client.pagination.Page;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.URL;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -78,7 +80,7 @@ public class ProvisioningHubService extends BaseService {
 		}
 
 		if (productName.startsWith("Liferay Data Platform")) {
-			_provisionLDP(koroneikiAccount, order);
+			_provisionLDP(koroneikiAccount, order, productPurchase);
 		}
 	}
 
@@ -188,6 +190,46 @@ public class ProvisioningHubService extends BaseService {
 					"serverLocation",
 					_getServerLocation(properties.get("dataCenterLocation"))
 				)));
+	}
+
+	private JSONObject _getLDPOfferingEntryJSONObject(
+		ProductPurchase productPurchase) {
+
+		JSONObject offeringEntryJSONObject = new JSONObject(
+		).put(
+			"offeringEntryId", productPurchase.getKey()
+		).put(
+			"productEntryId",
+			MarketplaceConstants.ANALYTICS_LDP_ENTERPRISE_PRODUCT_ENTRY_ID
+		).put(
+			"quantity", GetterUtil.getInteger(productPurchase.getQuantity())
+		).put(
+			"status", _getOfferingEntryStatus(productPurchase)
+		);
+
+		Date startDate = productPurchase.getStartDate();
+
+		if (startDate != null) {
+			offeringEntryJSONObject.put("startDate", startDate.getTime());
+		}
+
+		Date endDate = productPurchase.getEndDate();
+
+		if (endDate != null) {
+			offeringEntryJSONObject.put("supportEndDate", endDate.getTime());
+		}
+
+		return offeringEntryJSONObject;
+	}
+
+	private int _getOfferingEntryStatus(ProductPurchase productPurchase) {
+		if (Objects.equals(
+				productPurchase.getStatus(), ProductPurchase.Status.APPROVED)) {
+
+			return MarketplaceConstants.ANALYTICS_OFFERING_ENTRY_STATUS_ACTIVE;
+		}
+
+		return MarketplaceConstants.ANALYTICS_OFFERING_ENTRY_STATUS_INACTIVE;
 	}
 
 	private String _getServerLocation(String dataCenterLocation) {
@@ -355,7 +397,9 @@ public class ProvisioningHubService extends BaseService {
 			MarketplaceConstants.ORDER_PAYMENT_STATUS_NOT_REQUIRED);
 	}
 
-	private void _provisionLDP(Account koroneikiAccount, Order order)
+	private void _provisionLDP(
+			Account koroneikiAccount, Order order,
+			ProductPurchase productPurchase)
 		throws Exception {
 
 		Map<String, String> properties = koroneikiAccount.getProperties();
@@ -394,6 +438,12 @@ public class ProvisioningHubService extends BaseService {
 				incidentReportEmailAddressesJSONArray
 			).put(
 				"name", properties.get("ldpWorkspaceName")
+			).put(
+				"offeringEntries",
+				new JSONArray(
+				).put(
+					_getLDPOfferingEntryJSONObject(productPurchase)
+				)
 			).put(
 				"ownerEmailAddress",
 				_getContactEmailAddress(

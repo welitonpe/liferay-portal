@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -117,6 +118,13 @@ public class AnalyticsService extends BaseService {
 			JSONObject analyticsContextJSONObject, JSONObject jsonObject)
 		throws Exception {
 
+		JSONArray offeringEntriesJSONArray = jsonObject.optJSONArray(
+			"offeringEntries");
+
+		if (offeringEntriesJSONArray == null) {
+			offeringEntriesJSONArray = new JSONArray();
+		}
+
 		try {
 			String response = WebClient.builder(
 			).baseUrl(
@@ -149,7 +157,7 @@ public class AnalyticsService extends BaseService {
 				).with(
 					"name", jsonObject.getString("name")
 				).with(
-					"offeringEntries", "[]"
+					"offeringEntries", offeringEntriesJSONArray.toString()
 				).with(
 					"serverLocation", jsonObject.getString("serverLocation")
 				).with(
