@@ -126,6 +126,10 @@ public class AnalyticsService extends BaseService {
 		}
 
 		try {
+			if (_log.isInfoEnabled()) {
+				_log.info("Provisioning Analytics Cloud project " + jsonObject);
+			}
+
 			String response = WebClient.builder(
 			).baseUrl(
 				analyticsContextJSONObject.getString("url")
