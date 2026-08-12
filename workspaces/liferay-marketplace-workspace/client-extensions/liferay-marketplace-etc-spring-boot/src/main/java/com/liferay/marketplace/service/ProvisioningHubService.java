@@ -17,6 +17,7 @@ import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Product;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductPurchase;
 import com.liferay.osb.koroneiki.phloem.rest.client.pagination.Page;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -232,6 +233,15 @@ public class ProvisioningHubService extends BaseService {
 		return MarketplaceConstants.ANALYTICS_OFFERING_ENTRY_STATUS_INACTIVE;
 	}
 
+	private String _getSalesforceProjectId(Account koroneikiAccount) {
+		if (ArrayUtil.isEmpty(koroneikiAccount.getExternalLinks())) {
+			return null;
+		}
+
+		return MarketplaceUtil.getEntityId(
+			koroneikiAccount.getExternalLinks(), "salesforce", "project");
+	}
+
 	private String _getServerLocation(String dataCenterLocation) {
 		if (Objects.equals(dataCenterLocation, "asia-south1")) {
 			return "asia-south1-ac5-c1";
@@ -417,6 +427,18 @@ public class ProvisioningHubService extends BaseService {
 			return;
 		}
 
+		String salesforceProjectId = _getSalesforceProjectId(koroneikiAccount);
+
+		if (Validator.isNull(salesforceProjectId)) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Missing the Salesforce project ID to provision LDP for " +
+						"account " + koroneikiAccount.getKey());
+			}
+
+			return;
+		}
+
 		String securityContactEmailAddress = properties.get(
 			"securityContactEmailAddress");
 
@@ -432,7 +454,7 @@ public class ProvisioningHubService extends BaseService {
 			).put(
 				"corpProjectName", koroneikiAccount.getName()
 			).put(
-				"corpProjectUuid", koroneikiAccount.getKey()
+				"corpProjectUuid", salesforceProjectId
 			).put(
 				"incidentReportEmailAddresses",
 				incidentReportEmailAddressesJSONArray
@@ -460,6 +482,8 @@ public class ProvisioningHubService extends BaseService {
 					order
 				).put(
 					"analyticsProject", new JSONObject(analyticsProject)
+				).put(
+					"salesforceProjectId", salesforceProjectId
 				).toString()
 			).build(),
 			order.getId(), order.getPaymentStatus());
