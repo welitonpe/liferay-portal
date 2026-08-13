@@ -12,6 +12,13 @@ import java.util.Objects;
  */
 public class MarketplaceConstants {
 
+	public static final String ANALYTICS_LDP_ENTERPRISE_PRODUCT_ENTRY_ID =
+		"KOR-17350391";
+
+	public static final int ANALYTICS_OFFERING_ENTRY_STATUS_ACTIVE = 1;
+
+	public static final int ANALYTICS_OFFERING_ENTRY_STATUS_INACTIVE = 0;
+
 	public static final String[] KORONEIKI_AC_ENTITLEMENTS = {
 		"Liferay Analytics Cloud"
 	};
